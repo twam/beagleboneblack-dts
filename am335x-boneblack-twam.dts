@@ -1,0 +1,265 @@
+/*
+ * Copyright (C) 2012 Texas Instruments Incorporated - http://www.ti.com/
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+/dts-v1/;
+
+#include "am33xx.dtsi"
+#include "am335x-bone-common.dtsi"
+#include "am335x-bone-common-pinmux.dtsi"
+
+/ {
+	model = "TI AM335x BeagleBone Black";
+	compatible = "ti,am335x-bone-black", "ti,am335x-bone", "ti,am33xx";
+};
+
+&dcdc1_reg {
+	/* VDD_DDR3 voltage 1.35V */
+	regulator-name = "vdd_ddr3";
+	regulator-min-microvolt = <1350000>;
+	regulator-max-microvolt = <1350000>;
+	regulator-boot-on;
+	regulator-always-on;
+};
+
+&ldo3_reg {
+	regulator-min-microvolt = <1800000>;
+	regulator-max-microvolt = <1800000>;
+	regulator-always-on;
+};
+
+&ocp {
+	/* clkout2 */
+	P9_41_pinmux {
+		status = "disabled";
+	};
+	/* mmc1 */
+	P9_92_pinmux {
+		status = "disabled";
+	};
+};
+
+&mmc1 {
+	vmmc-supply = <&vmmcsd_fixed>;
+};
+
+&am33xx_pinmux {
+	pinctrl-names = "default";
+	pinctrl-0 = <&clkout2_pin>;
+
+	gpmc_pins: pinmux_gpmc_pins {
+		pinctrl-single,pins = <
+			0x000 0x30	/* gpmc_ad0.gpmc_ad0 MODE0 | INPUT | PULLUP */
+			0x004 0x30	/* gpmc_ad1.gpmc_ad1 MODE0 | INPUT | PULLUP */
+			0x008 0x30	/* gpmc_ad2.gpmc_ad2 MODE0 | INPUT | PULLUP */
+			0x00C 0x30	/* gpmc_ad3.gpmc_ad3 MODE0 | INPUT | PULLUP */
+			0x010 0x30	/* gpmc_ad4.gpmc_ad4 MODE0 | INPUT | PULLUP */
+			0x014 0x30	/* gpmc_ad5.gpmc_ad5 MODE0 | INPUT | PULLUP */
+			0x018 0x30	/* gpmc_ad6.gpmc_ad6 MODE0 | INPUT | PULLUP */
+			0x01C 0x30	/* gpmc_ad7.gpmc_ad7 MODE0 | INPUT | PULLUP */
+			0x020 0x30	/* gpmc_ad8.gpmc_ad8 MODE0 | INPUT | PULLUP */
+			0x024 0x30	/* gpmc_ad9.gpmc_ad9 MODE0 | INPUT | PULLUP */
+			0x028 0x30	/* gpmc_ad10.gpmc_ad10 MODE0 | INPUT | PULLUP */
+			0x02C 0x30	/* gpmc_ad11.gpmc_ad11 MODE0 | INPUT | PULLUP */
+			0x030 0x30	/* gpmc_ad12.gpmc_ad12 MODE0 | INPUT | PULLUP */
+			0x034 0x30	/* gpmc_ad13.gpmc_ad13 MODE0 | INPUT | PULLUP */
+			0x038 0x30	/* gpmc_ad14.gpmc_ad14 MODE0 | INPUT | PULLUP */
+			0x03C 0x30	/* gpmc_ad15.gpmc_ad15 MODE0 | INPUT | PULLUP */
+			0x080 0x08	/* gpmc_cscn1.gpmc_cscn1 MODE0 | OUTPUT */
+			0x08C 0x28	/* gpmc_clk.gpmc_clk MODE0 | OUTPUT */
+			0x090 0x08	/* gpmc_advn_ale.gpmc_advn_ale MODE0 | OUTPUT */
+			0x094 0x08	/* gpmc_oen_ren.gpmc_oen_ren MODE0 | OUTPUT */
+			0x098 0x08	/* gpmc_wen.gpmc_wen MODE0 | OUTPUT */
+			0x09C 0x08	/* gpmc_ben0_cle.gpmc_ben0_cle MODE0 | OUTPUT */
+			0x078 0x08	/* gpmc_ben1_cle.gpmc_ben1_cle MODE0 | OUTPUT */
+		>;
+	};
+};
+
+&i2c2 {
+	gpio_expander: gpio_expander_0@24 {
+		gpio-controller;
+ 		#gpio-cells = <2>;
+ 
+		device_type = "io_expander";
+		compatible = "pca9534";
+		reg = <0x24>;
+	};
+
+	/delete-node/ cape_eeprom0@54;
+	/delete-node/ cape_eeprom1@55;
+	/delete-node/ cape_eeprom2@56;
+	/delete-node/ cape_eeprom3@57;
+};
+
+&gpmc {
+	#address-cells = <2>;
+	#size-cells = <1>;
+
+	pinctrl-names = "default";
+	pinctrl-0 = <&gpmc_pins>;	
+
+	/* chip select ranges */
+	ranges = <1 0 0x01000000 0x1000000>;
+ 
+ 	camera {
+		compatible = "driverneeded";
+		status = "okay";
+
+		reg = <1 0 0x01000000>;	/*CSn1*/
+
+		bank-width = <2>;		/* GPMC_CONFIG1_DEVICESIZE(1) */
+
+		/*gpmc,burst-write;*/
+		/*gpmc,burst-read;*/
+		/*gpmc,burst-wrap;*/
+		gpmc,sync-read;		/* GPMC_CONFIG1_READTYPE_ASYNC */
+		gpmc,sync-write;		/* GPMC_CONFIG1_WRITETYPE_ASYNC */
+		gpmc,clk-activation-ns = <0>;	/* GPMC_CONFIG1_CLKACTIVATIONTIME(2) */
+		gpmc,burst-length = <16>;	/* GPMC_CONFIG1_PAGE_LEN(2) */
+		gpmc,mux-add-data = <2>;	/* GPMC_CONFIG1_MUXTYPE(2) */
+
+		gpmc,sync-clk-ps = <20000>;	/* CONFIG2 */
+
+		gpmc,cs-on-ns = <0>;
+		gpmc,cs-rd-off-ns = <100>;
+		gpmc,cs-wr-off-ns = <40>;
+
+		gpmc,adv-on-ns = <0>;		/* CONFIG3 */
+		gpmc,adv-rd-off-ns = <20>;
+		gpmc,adv-wr-off-ns = <20>;
+
+		gpmc,we-on-ns = <20>;		/* CONFIG4 */
+		gpmc,we-off-ns = <40>;
+		gpmc,oe-on-ns = <20>;
+		gpmc,oe-off-ns = <100>;
+
+		gpmc,page-burst-access-ns = <20>;	/* CONFIG 5 */
+		gpmc,access-ns = <80>;
+		gpmc,rd-cycle-ns = <120>;
+		gpmc,wr-cycle-ns = <60>;
+		gpmc,wr-access-ns = <40>;		/* CONFIG 6 */
+		gpmc,wr-data-mux-bus-ns = <20>;
+
+		/*gpmc,bus-turnaround-ns = <40>;*/		/* CONFIG6:3:0 = 4 */
+		/*gpmc,cycle2cycle-samecsen;*/		/* CONFIG6:7 = 1 */
+		/*gpmc,cycle2cycle-delay-ns = <40>;*/	/* CONFIG6:11:8 = 4 */
+
+		/* not using dma engine yet, but we can get the channel number here */
+		/* dmas = <&edma 20>;
+		dma-names = "dma"; */
+	};
+};
+
+/ {
+	myfpga {
+		compatible = "fpga-ctrl";
+
+		mode0-gpios = <&gpio_expander 0 GPIO_ACTIVE_HIGH>;
+		mode1-gpios = <&gpio_expander 1 GPIO_ACTIVE_HIGH>;
+		init_b-gpios = <&gpio_expander 2 GPIO_ACTIVE_HIGH>;
+		program-gpios = <&gpio_expander 3 GPIO_ACTIVE_HIGH>;
+		done-gpios = <&gpio_expander 5 GPIO_ACTIVE_HIGH>;
+
+		/* flash miso p9_30 = spi1_d1 */
+		/* flash clk p9_31 = spi1_sclk */
+		/* bb_spi_miso p9_29 = spi1_d0 */
+		/* bb_spi_ss p9_28 = spi1_cs0 */
+
+		spi = <&spi1>;
+	};
+};
+
+/* #include "am335x-boneblack-emmc.dtsi" */
+/* HDMI: with audio */
+/* #include "am335x-boneblack-nxp-hdmi-audio.dtsi" */
+/* HDMI: without audio */
+/* #include "am335x-boneblack-nxp-hdmi-no-audio.dtsi" */
+
+/* can1: P9_24, P9_26 */
+/* #include "am335x-can1.dtsi" */
+/* #include "am335x-bone-can1.dtsi" */
+
+/* spi0: */
+/* P9.17 spi0_cs0 */
+/* P9.18 spi0_d1 */
+/* P9.21 spi0_d0 */
+/* P9.22 spi0_sclk */
+/* #include "am335x-bone-spi0-spidev.dtsi" */
+
+/* spi1: */
+/* P9.31 spi1_sclk */
+/* P9.29 spi1_d0 */
+/* P9.30 spi1_d1 */
+/* P9.28 spi1_cs0 */
+#include "am335x-bone-spi1-spidev.dtsi"
+
+/* spi1a: */
+/* P9.42 spi1_sclk */
+/* P9.29 spi1_d0 */
+/* P9.30 spi1_d1 */
+/* P9.20 spi1_cs0 */
+/* #include "am335x-bone-spi1a-spidev.dtsi" */
+
+/* uart1: P9.24, P9.26 */
+/* #include "am335x-ttyO1.dtsi" */
+/* #include "am335x-bone-ttyO1.dtsi" */
+/* uart2: P9.21, P9.22 */
+/* #include "am335x-ttyO2.dtsi" */
+/* #include "am335x-bone-ttyO2.dtsi" */
+/* uart4: P9.11, P9.13 */
+/* #include "am335x-ttyO4.dtsi" */
+/* #include "am335x-bone-ttyO4.dtsi" */
+/* uart5: P8.37, P8.38 boneblack: hdmi has to be disabled for ttyO5 */
+/* #include "am335x-ttyO5.dtsi" */
+/* #include "am335x-bone-ttyO5.dtsi" */
+
+/* Capes */
+/* http://elinux.org/4D_4.3_LCD_CAPE */
+/* 4DCAPE-43 (Non Touch version): */
+/* #include "am335x-bone-4dcape-43.dtsi" */
+/* 4DCAPE-43T (Resistive Touch version): */
+/* #include "am335x-bone-4dcape-43t.dtsi" */
+
+/* http://www.4dsystems.com.au/product/4DCAPE_70T/ */
+/* 4DCAPE-70 (Non Touch version): */
+/* #include "am335x-bone-4dcape-70.dtsi" */
+/* 4DCAPE-70T (Resistive Touch version): */
+/* #include "am335x-bone-4dcape-70t.dtsi" */
+
+/* http://elinux.org/CircuitCo:Audio_Cape_RevA */
+/* #include "am335x-bone-audio-reva.dtsi" */
+
+/* http://elinux.org/CircuitCo:Audio_Cape_RevB */
+/* Pins: P9.24, P9.28, P9.29, P9.31, P9.30 */
+/* #include "am335x-bone-audio-revb.dtsi" */
+
+/* http://elinux.org/CircuitCo:BeagleBone_LCD3 */
+/* #include "am335x-bone-lcd3-01-00a2.dtsi" */
+
+/* http://elinux.org/CircuitCo:BeagleBone_LCD4 */
+/* #include "am335x-bone-lcd4-01-00a1.dtsi" */
+
+/* http://elinux.org/CircuitCo:BeagleBone_LCD7 */
+/* am335x-boneblack: emmc has to be disabled for lcd7-01-00a2 */
+/* #include "am335x-bone-lcd7-01-00a2.dtsi" */
+/* #include "am335x-bone-lcd7-01-00a3.dtsi" */
+
+/* http://www.chipsee.com/product/evm/beagle/beaglebone-black-expansion-capacitive.html */
+/* #include "am335x-bone-bbb-exp-c.dtsi" */
+
+/* http://elinux.org/CircuitCo:RTC_Cape */
+/* i2c1: P9.17, P9.18 */
+/* gpio: P8.26 (mfp: wakeup) */
+/* #include "am335x-bone-rtc-01-00a1.dtsi" */
+
+/* http://elinux.org/Cryptotronix:CryptoCape */
+/* uart4: P9.11, P9.13 */
+/* gpio: gpio1 13 gpio1 17 (gpio NOT IMPLEMENTED YET) */
+/* #include "am335x-bone-crypto-00a0.dtsi" */
+
+/* http://elinux.org/CircuitCo:Basic_Proto_Cape */
+/* #include "am335x-bone-basic-proto-cape.dtsi" */
