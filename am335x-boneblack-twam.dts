@@ -80,10 +80,17 @@
 };
 
 &i2c2 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c2_pins>;
+
+	status = "okay";
+	clock-frequency = <400000>;
+
 	gpio_expander: gpio_expander_0@24 {
 		gpio-controller;
- 		#gpio-cells = <2>;
- 
+		#gpio-cells = <2>;
+
 		device_type = "io_expander";
 		compatible = "pca9534";
 		reg = <0x24>;
@@ -96,80 +103,78 @@
 };
 
 &gpmc {
-	#address-cells = <2>;
-	#size-cells = <1>;
+	status = "okay";
 
 	pinctrl-names = "default";
-	pinctrl-0 = <&gpmc_pins>;	
+	pinctrl-0 = <&gpmc_pins>;
 
 	/* chip select ranges */
 	ranges = <1 0 0x01000000 0x1000000>;
- 
- 	camera {
-		compatible = "driverneeded";
+
+	nor@1,0 {
+		compatible = "gpmc-framebuffer";
 		status = "okay";
 
 		reg = <1 0 0x01000000>;	/*CSn1*/
 
-		bank-width = <2>;		/* GPMC_CONFIG1_DEVICESIZE(1) */
+		bank-width = <2>; /* GPMC_CONFIG1_DEVICESIZE(1) */
 
-		/*gpmc,burst-write;*/
-		/*gpmc,burst-read;*/
-		/*gpmc,burst-wrap;*/
-		gpmc,sync-read;		/* GPMC_CONFIG1_READTYPE_ASYNC */
-		gpmc,sync-write;		/* GPMC_CONFIG1_WRITETYPE_ASYNC */
-		gpmc,clk-activation-ns = <0>;	/* GPMC_CONFIG1_CLKACTIVATIONTIME(2) */
-		gpmc,burst-length = <16>;	/* GPMC_CONFIG1_PAGE_LEN(2) */
-		gpmc,mux-add-data = <2>;	/* GPMC_CONFIG1_MUXTYPE(2) */
+		gpmc,sync-clk-ps = <20000>;	/* Minimum clock period for synchronous mode, in picoseconds */
 
-		gpmc,sync-clk-ps = <20000>;	/* CONFIG2 */
+		/* Chip-select signal timings (in nanoseconds) corresponding to GPMC_CONFIG2: */
+		gpmc,cs-on-ns = <0>; /* Assertion time */
+		gpmc,cs-rd-off-ns = <100>; /* Read deassertion time */
+		gpmc,cs-wr-off-ns = <40>; /* Write deassertion time */
 
-		gpmc,cs-on-ns = <0>;
-		gpmc,cs-rd-off-ns = <100>;
-		gpmc,cs-wr-off-ns = <40>;
+		/* ADV signal timings (in nanoseconds) corresponding to GPMC_CONFIG3: */
+		gpmc,adv-on-ns = <0>; /* Assertion time */
+		gpmc,adv-rd-off-ns = <20>; /* Read deassertion time */
+		gpmc,adv-wr-off-ns = <20>; /* Write deassertion time */
 
-		gpmc,adv-on-ns = <0>;		/* CONFIG3 */
-		gpmc,adv-rd-off-ns = <20>;
-		gpmc,adv-wr-off-ns = <20>;
+		/* WE signals timings (in nanoseconds) corresponding to GPMC_CONFIG4: */
+		gpmc,we-on-ns = <20>; /* Assertion time */
+		gpmc,we-off-ns = <40>; /* Deassertion time */
 
-		gpmc,we-on-ns = <20>;		/* CONFIG4 */
-		gpmc,we-off-ns = <40>;
-		gpmc,oe-on-ns = <20>;
-		gpmc,oe-off-ns = <100>;
+		/*  OE signals timings (in nanoseconds) corresponding to GPMC_CONFIG4: */
+		gpmc,oe-on-ns = <20>; /* Assertion time */
+		gpmc,oe-off-ns = <100>; /* Deassertion time */
 
-		gpmc,page-burst-access-ns = <20>;	/* CONFIG 5 */
-		gpmc,access-ns = <80>;
-		gpmc,rd-cycle-ns = <120>;
-		gpmc,wr-cycle-ns = <60>;
-		gpmc,wr-access-ns = <40>;		/* CONFIG 6 */
-		gpmc,wr-data-mux-bus-ns = <20>;
+		/* Access time and cycle time timings (in nanoseconds) corresponding to GPMC_CONFIG5: */
+		gpmc,page-burst-access-ns = <20>; /* Multiple access word delay */
+		gpmc,access-ns = <80>; /* Start-cycle to first data valid delay */
+		gpmc,rd-cycle-ns = <120>; /* Total read cycle time */
+		gpmc,wr-cycle-ns = <60>; /* Total write cycle time */
+		gpmc,bus-turnaround-ns = <0>; /* Turn-around time between successive accesses */
+		gpmc,cycle2cycle-delay-ns = <0>; /* Delay between chip-select pulses */
+		gpmc,clk-activation-ns = <0>; /* GPMC clock activation time */
+		gpmc,wait-monitoring-ns = <0>; /* Start of wait monitoring with regard to valid data */
 
-		/*gpmc,bus-turnaround-ns = <40>;*/		/* CONFIG6:3:0 = 4 */
-		/*gpmc,cycle2cycle-samecsen;*/		/* CONFIG6:7 = 1 */
-		/*gpmc,cycle2cycle-delay-ns = <40>;*/	/* CONFIG6:11:8 = 4 */
+		/* Boolean timing parameters. If property is present parameter enabled and disabled if omitted: */
+		/* gpmc,adv-extra-delay; */ /* ADV signal is delayed by half GPMC clock */
+		/* gpmc,cs-extra-delay; */ /* CS signal is delayed by half GPMC clock */
+		/* gpmc,cycle2cycle-diffcsen; */ /* Add "cycle2cycle-delay" between successive cesses to a different CS */
+		/* gpmc,cycle2cycle-samecsen; */ /* Add "cycle2cycle-delay" between successive cesses to the same CS */
+		/* gpmc,oe-extra-delay; */ /* OE signal is delayed by half GPMC clock */
+		/* gpmc,we-extra-delay; */ /* WE signal is delayed by half GPMC clock */
+		/* gpmc,time-para-granularity: */ /* Multiply all access times by 2 */
 
-		/* not using dma engine yet, but we can get the channel number here */
-		/* dmas = <&edma 20>;
-		dma-names = "dma"; */
-	};
-};
+		/* The following are only applicable to OMAP3+ and AM335x: */
+		gpmc,wr-access-ns = <40>; /* In synchronous write mode, for single or burst accesses, defines the number of GPMC_FCLK cycles from start access time to the GPMC_CLK rising edge used by the memory device for the first data capture. */
+		gpmc,wr-data-mux-bus-ns = <20>; /* In address-data multiplex mode, specifies the time when the first data is driven on  the address-data bus. */
 
-/ {
-	myfpga {
-		compatible = "fpga-ctrl";
+		/* GPMC chip-select settings properties for child nodes. All are optional. */
 
-		mode0-gpios = <&gpio_expander 0 GPIO_ACTIVE_HIGH>;
-		mode1-gpios = <&gpio_expander 1 GPIO_ACTIVE_HIGH>;
-		init_b-gpios = <&gpio_expander 2 GPIO_ACTIVE_HIGH>;
-		program-gpios = <&gpio_expander 3 GPIO_ACTIVE_HIGH>;
-		done-gpios = <&gpio_expander 5 GPIO_ACTIVE_HIGH>;
-
-		/* flash miso p9_30 = spi1_d1 */
-		/* flash clk p9_31 = spi1_sclk */
-		/* bb_spi_miso p9_29 = spi1_d0 */
-		/* bb_spi_ss p9_28 = spi1_cs0 */
-
-		spi = <&spi1>;
+		/* gpmc,burst-length = <16>; */ /* Page/burst length. Must be 4, 8 or 16. */
+		/* gpmc,burst-wrap */ /* Enables wrap bursting */
+		/* gpmc,burst-read */ /* Enables read page/burst mode */
+		/* gpmc,burst-write */ /* Enables write page/burst mode */
+		/* gpmc,device-width */ /* Total width of device(s) connected to a GPMC chip-select in bytes. The GPMC supports 8-bit and 16-bit devices and so this property must be 1 or 2. */
+		gpmc,mux-add-data = <2>; /* Address and data multiplexing configuration. Valid values are 1 for address-address-data multiplexing mode and 2 for address-data multiplexing mode. */
+		gpmc,sync-read; /* Enables synchronous read. Defaults to asynchronous is this is not set. */
+		gpmc,sync-write; /* Enables synchronous writes. Defaults to asynchronous is this is not set. */
+		/* gpmc,wait-pin */ /* Wait-pin used by client. Must be less than "gpmc,num-waitpins". */
+		/* gpmc,wait-on-read */ /* Enables wait monitoring on reads. */
+		/* gpmc,wait-on-write */ /* Enables wait monitoring on writes. */
 	};
 };
 
