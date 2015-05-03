@@ -112,8 +112,13 @@
 	ranges = <1 0 0x01000000 0x1000000>;
 
 	nor@1,0 {
-		compatible = "gpmc-framebuffer";
 		status = "okay";
+
+		compatible = "simple-framebuffer";
+		width = <64>;
+		height = <64>;
+		stride = <(64*2)>;
+		format = "r5g6b5"; //a8r8g8b8;
 
 		reg = <1 0 0x01000000>;	/*CSn1*/
 
