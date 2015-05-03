@@ -1,5 +1,5 @@
 # Linux Kernel directorty
-KDIR=../linux
+KDIR=../linux-stable
 # Directory to install dtb files to
 INSTALL_DIR=/tftproot
 # Cross-compile prefix
